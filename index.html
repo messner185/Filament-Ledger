@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Filament Ledger</title><meta name="description" content="Local filament inventory, print costs, and Bambu Studio imports.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23182736'/%3E%3Ccircle cx='16' cy='16' r='10' fill='none' stroke='%2343d9b0' stroke-width='4'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%2343d9b0'/%3E%3C/svg%3E">
+<meta name="color-scheme" content="light dark">
+<script src="theme.js"></script>
+<link rel="stylesheet" href="style.css"><script src="vendor/jszip.min.js" defer></script><script type="module" src="script.js"></script>
+</head><body>
+<a class="skip-link" href="#new-print">Skip to print form</a>
+<header class="site-header">
+  <a class="brand" href="#overview" aria-label="Filament Ledger home"><span class="brand-mark" aria-hidden="true">◎</span><span>Filament<span class="brand-light"> Ledger</span></span></a>
+  <div class="header-actions"><span class="local-badge"><span aria-hidden="true">●</span> Saved on this device</span><button id="theme-toggle" type="button" aria-label="Dark mode" aria-pressed="false" title="Switch to dark mode"><span aria-hidden="true">☾</span><span class="theme-label">Dark mode</span></button><button id="export">Export backup</button><label class="button subtle">Restore backup<input id="restore" type="file" accept=".json" hidden></label></div>
+</header>
+<div class="app-shell">
+<nav class="sidebar" aria-label="Workshop navigation">
+  <p class="nav-caption">WORKSPACE</p>
+  <a class="nav-link" href="#new-print"><span aria-hidden="true">＋</span> New print</a>
+  <a class="nav-link" href="#spools"><span aria-hidden="true">◎</span> Spool library</a>
+  <a class="nav-link" href="#print-history"><span aria-hidden="true">↺</span> Print history</a>
+  <a class="nav-link" href="#workshop-settings"><span aria-hidden="true">⚙</span> Cost &amp; pricing</a>
+  <div class="sidebar-note"><span class="note-icon" aria-hidden="true">↗</span><strong>Your workshop, organized.</strong><p>Track your stock. Know your costs. Price with confidence.</p><small>Export a backup to keep your inventory safe.</small></div>
+</nav>
+<main id="overview">
+  <div class="page-heading"><div><p class="eyebrow">YOUR PRINT WORKSHOP</p><h1>Workshop overview</h1><p class="page-subtitle">From a spool of filament to your next finished print.</p></div><a class="button primary" href="#new-print">＋ New print</a></div>
+  <p id="message" role="status" aria-live="polite">Data stays in this browser. Export a backup regularly.</p>
+  <section class="metrics" aria-label="Workshop totals">
+    <article><span class="metric-icon" aria-hidden="true">◎</span><span>Filament remaining</span><strong id="total-weight">0 g</strong><small>Across your active spools</small></article>
+    <article><span class="metric-icon" aria-hidden="true">▤</span><span>Active spools</span><strong id="total-spools">0</strong><small>Ready for your next project</small></article>
+    <article><span class="metric-icon" aria-hidden="true">↗</span><span>Recorded print costs</span><strong id="total-cost">0</strong><small>Completed and failed prints</small></article>
+  </section>
+  <div class="columns">
+  <section class="panel navigation-section print-panel" id="new-print" aria-labelledby="print-heading">
+    <div class="panel-heading"><div><p class="eyebrow">MAKE SOMETHING</p><h2 id="print-heading">Plan your next print</h2><p>Import a sliced file or fill in the details below.</p></div><span class="section-tag">PRINT ESTIMATOR</span></div>
+    <div class="import"><div class="import-heading"><span class="import-icon" aria-hidden="true">⇧</span><div><strong>Start with your Bambu file</strong><p>Import estimates and match filament to your spool library.</p></div></div><div class="actions"><label class="button import-button">Choose Bambu file<input id="slicer-file" type="file" accept=".3mf,.gcode" hidden></label><button id="folder" type="button">Connect export folder</button><button id="refresh-folder" type="button" hidden>Check folder</button></div><small class="hint">Sliced .gcode.3mf or plain .gcode · Review estimates before saving.</small><div id="folder-files"></div></div>
+    <div id="import-details" hidden></div>
+    <form id="print-form" class="form-grid print-form">
+      <fieldset class="wide form-section"><legend><span class="step-number">1</span> Print details</legend><div class="form-grid"><label class="wide">Print name<input name="name" required maxlength="120" placeholder="e.g. Desk organizer"></label><label>Print duration <span class="field-unit">hours</span><input name="hours" type="number" min="0" step="0.001" value="0" required><small class="hint">Use decimal hours: 1 h 30 min = 1.5.</small></label><label>Other costs <span class="field-unit">per job</span><input name="other" type="number" min="0" step="0.01" value="0" required><small class="hint">Packaging, extras, or expected reprint costs.</small></label></div></fieldset>
+      <fieldset class="wide form-section"><legend><span class="step-number">2</span> Filament &amp; hands-on work</legend><div id="usage-rows"></div><button type="button" id="add-usage" class="text-button">＋ Add another filament</button><div class="form-grid labor-fields"><label>Hands-on labor <span class="field-unit">minutes</span><input name="laborMinutes" type="number" min="0" step="any" value="0" required><small class="hint">Setup, finishing, and packing. Exclude unattended print time.</small></label><label>Overhead <span class="field-unit">per job</span><input name="overhead" type="number" min="0" step="any" value="0" required><small class="hint">Your share of business expenses. Include each cost only once.</small></label></div></fieldset>
+      <fieldset class="wide form-section"><legend><span class="step-number">3</span> Review &amp; save</legend><div class="form-grid"><label>Print status<select name="status"><option value="planned">Planned — no deduction</option><option value="completed">Completed — deduct filament</option><option value="failed">Failed — deduct filament</option></select></label><label>Notes <span class="field-unit">optional</span><input name="notes" maxlength="500" placeholder="Anything to remember?"></label></div></fieldset>
+      <div class="estimate wide"><div class="quote-totals"><div><span>Estimated print cost</span><strong id="estimate">0</strong></div><div class="selling-total"><span>Suggested selling price</span><strong id="selling-price">0</strong></div></div><small id="cost-breakdown"></small><small id="pricing-breakdown"></small><p>Before sales tax · Suggested price and profit are estimates, not recorded sales.</p><a href="#workshop-settings">Adjust your cost &amp; pricing rates →</a></div>
+      <div class="save-row wide"><p>Planned prints leave your inventory untouched.</p><button class="primary" id="save-print">Save print</button></div>
+    </form>
+  </section>
+  <section class="panel navigation-section inventory-panel" id="spools" aria-labelledby="spools-heading"><div class="panel-heading"><div><p class="eyebrow">YOUR MATERIALS</p><h2 id="spools-heading">Spool library</h2><p>Physical spools, ready to put to work.</p></div><a href="#add-spool" class="button compact">＋ Add spool</a></div><div id="inventory"></div><details id="add-spool" class="add-spool"><summary>＋ Add a new spool</summary><p class="hint">Enter filament weight only, without the empty spool.</p><form id="spool-form" class="form-grid">
+<label class="wide">Spool name<input name="name" required maxlength="100" placeholder="Blue PLA · spool 1"></label>
+<label>Brand<input name="brand" maxlength="80"></label><label>Material<input name="material" value="PLA" required maxlength="40"></label><label>Color<input name="color" placeholder="Blue" maxlength="40"></label><label>Purchase price<input name="price" type="number" min="0" step="0.01" value="25" required></label><label>Original filament (g)<input name="original" type="number" min="0.01" step="0.01" value="1000" required></label><label>Remaining filament (g)<input name="remaining" type="number" min="0" step="0.01" value="1000" required></label><button class="primary wide">Save spool</button></form></details></section>
+  </div>
+  <section class="panel navigation-section" id="print-history" aria-labelledby="history-heading"><div class="panel-heading"><div><p class="eyebrow">YOUR PRINT LOG</p><h2 id="history-heading">Print history</h2><p>Review plans, track finished work, and revisit your costs.</p></div></div><p class="hint">Load a plan to enter actual usage. Undo returns consumed filament to existing spools.</p><div class="table-wrap"><table><thead><tr><th>Print / date</th><th>Status</th><th>Filament</th><th>Time</th><th>Cost &amp; quote</th><th>Actions</th></tr></thead><tbody id="history"></tbody></table></div></section>
+  <section class="navigation-section settings-section" id="workshop-settings" aria-labelledby="rates-heading"><div class="section-heading"><div><p class="eyebrow">MAKE THE NUMBERS YOURS</p><h2 id="rates-heading">Cost &amp; pricing</h2><p>Set your workshop rates once. Fine-tune costs for each job.</p></div></div>
+    <div class="settings-columns"><section class="panel"><div class="panel-heading"><div><h3>Print costs</h3><p>The running cost of your machine.</p></div><span class="section-tag">PRODUCTION</span></div><form id="settings-form" class="form-grid settings"><label>Currency code<input name="currency" value="USD" maxlength="3" required></label><label>Electricity / kWh<input name="electricity" type="number" min="0" step="0.001" value="0.30" required></label><label>Average printer watts<input name="watts" type="number" min="0" step="1" value="150" required></label><label>Machine allowance / hour<input name="machine" type="number" min="0" step="0.01" value="0.50" required></label><button class="primary wide">Save settings</button></form><p class="hint">Costs use original spool weight. Historical costs are saved with each print. Power usage is an estimate.</p></section>
+    <section class="panel"><div class="panel-heading"><div><h3>Selling price</h3><p>Pay for your time. Leave room for profit.</p></div><span class="section-tag">PRICING</span></div><form id="pricing-form" class="form-grid">
+<label>Labor rate / hour<input name="laborRate" type="number" min="0" step="any" value="20" required><small class="hint">Illustrative U.S. starting range: $20–$35/hour for hands-on work. Skilled design may need more. This is a planning example, not an industry benchmark; choose a rate that pays you adequately.</small></label>
+<label>Default overhead / job<input name="overhead" type="number" min="0" step="any" value="0" required><small class="hint">No universal typical rate. Divide monthly business overhead by expected monthly orders: $100 ÷ 20 orders = $5/job. Exclude costs already covered by machine allowance.</small></label>
+<label>Selling fees (%)<input name="feePercent" type="number" min="0" max="99.99" step="any" value="0" required><small class="hint">Cash with no platform fees: 0%. U.S. examples: Stripe online domestic cards 2.9%; Etsy base transaction + payment processing 9.5%. See sources below for exclusions.</small></label>
+<label>Fixed selling fee / order<input name="fixedFee" type="number" min="0" step="any" value="0" required><small class="hint">U.S. examples: Stripe $0.30; Etsy payment processing $0.25. Etsy also charges $0.20 per listing; include it here for a one-item order or in Other costs, once.</small></label>
+<label>Target profit margin (%)<input name="margin" type="number" min="0" max="99.99" step="any" value="30" required><small class="hint">Try 20–40% as a planning range, with 30% as an example starting point. This is not a typical industry rate. Compare with customers' willingness to pay. Margin is profit ÷ selling price after the costs and fees entered here; it is not markup.</small></label>
+<button class="primary wide">Save pricing settings</button></form><details class="rate-guidance"><summary>How pricing works &amp; fee sources</summary>
+<p class="hint">All monetary inputs use your selected currency. Dollar examples above are USD, not automatic currency conversions. Labor and margin defaults are illustrative. Fee examples checked October 2, 2026: <a href="https://stripe.com/pricing" target="_blank" rel="noopener noreferrer">Stripe pricing</a>, <a href="https://www.etsy.com/legal/fees/" target="_blank" rel="noopener noreferrer">Etsy fees</a>, and <a href="https://www.etsy.com/legal/etsy-payments/" target="_blank" rel="noopener noreferrer">Etsy payment processing</a>. Etsy advertising and other charges, international cards, fee bases including shipping/tax, and local rates can change the result. Enter your actual combined fees. Treat each saved print as one order, or allocate fixed fees across its items.</p>
+<p class="hint">Price = (print cost + labor + overhead + fixed fee) ÷ (1 − selling fee % − profit margin %). Price rounds up to your currency's smallest unit. Saving settings affects new estimates; historical quotes stay saved. Loading a plan uses current rates with its saved labor minutes and overhead.</p>
+</details></section></div>
+  </section>
+  <footer>Filament Ledger <span>·</span> Local storage <span>·</span> No printer connection <span>·</span> Back up before clearing browser data</footer>
+</main>
+</div>
+</body></html>
